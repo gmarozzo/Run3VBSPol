@@ -1,0 +1,76 @@
+#ifndef Run3VBSPol_TreePlanter_H
+#define Run3VBSPol_TreePlanter_H
+
+/** \class TreePlanter
+ *  No description available.
+ *
+ *  $Date: $
+ *  $Revision: $
+ *  \author G.Marozzo - LIP <gmarozzo@cern.ch>
+ */
+
+#include "FWCore/Framework/interface/EDAnalyzer.h"
+#include "FWCore/Utilities/interface/InputTag.h"
+#include "FWCore/Framework/interface/Event.h"
+#include "FWCore/Framework/interface/Frameworkfwd.h"
+
+#include "DataFormats/PatCandidates/interface/Muon.h"
+#include "DataFormats/PatCandidates/interface/Electron.h"
+#include "DataFormats/PatCandidates/interface/CompositeCandidate.h"
+#include "DataFormats/Common/interface/MergeableCounter.h"
+
+#include <SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h>
+#include "SimDataFormats/GeneratorProducts/interface/GenRunInfoProduct.h"
+
+#include "DataFormats/PatCandidates/interface/MET.h"
+
+//#include <CommonLHETools/LHEHandler/interface/LHEHandler.h>
+//#include <JHUGenMELA/MELA/interface/Mela.h>
+
+class TTree;
+namespace pat{class Jet;}
+
+class TreePlanter: public edm::EDAnalyzer {
+  
+ public:
+  
+  /// Constructor
+  TreePlanter(const edm::ParameterSet &);
+  
+  /// Destructor
+  virtual ~TreePlanter(){};
+  
+  // Operations
+  virtual void beginJob();
+  virtual void endLuminosityBlock(edm::LuminosityBlock const& lumi, edm::EventSetup const& setup);
+  virtual void analyze(const edm::Event& event, const edm::EventSetup& setup);
+  virtual void endRun(const edm::Run& run, const edm::EventSetup& setup);
+  virtual void endJob();
+  void initTree();
+  
+
+ private:
+
+  TTree *tree_;
+
+  std::vector<float> * muon_pt_;
+  std::vector<float> * muon_eta_;
+  std::vector<float> * muon_recSF_;
+  std::vector<float> * muon_idSF_;
+
+  std::vector<float> * electron_pt_;
+  std::vector<float> * electron_sceta_;
+  std::vector<float> * electron_SF_;
+
+  std::vector<float> * mll_;
+    
+  // ------------------- Input Labels ------------------- //
+  
+  edm::EDGetTokenT<pat::MuonCollection>                 theMuonToken;
+  edm::EDGetTokenT<pat::ElectronCollection>             theElectronToken;
+  edm::EDGetTokenT<std::vector<pat::Jet> >              theJetToken;
+
+};
+#endif
+
+

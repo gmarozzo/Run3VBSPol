@@ -1,0 +1,7 @@
+<use name = "root"/>
+<use   name="rootcore"/>
+
+
+<export>
+  <lib   name="ghiohbdas"/>
+</export>

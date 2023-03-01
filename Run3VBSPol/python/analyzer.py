@@ -1,0 +1,58 @@
+import FWCore.ParameterSet.Config as cms
+
+process = cms.Process("test")
+
+process.maxEvents = cms.untracked.PSet(
+    input = cms.untracked.int32(-1)
+)
+
+process.load("FWCore.MessageService.MessageLogger_cfi")
+process.MessageLogger.cerr.FwkReport = cms.untracked.PSet(
+    reportEvery = cms.untracked.int32(1000),
+    limit = cms.untracked.int32(-1),
+)
+
+process.source = cms.Source("PoolSource",
+    duplicateCheckMode = cms.untracked.string('noDuplicateCheck'),
+    fileNames = cms.untracked.vstring('/store/mc/Run3Winter22MiniAOD/TTTo2L2Nu_CP5_13p6TeV_powheg-pythia8/MINIAODSIM/122X_mcRun3_2021_realistic_v9-v2/2550000/026b4aa4-fbe9-4d94-9ab9-03b9bd034451.root'), #TTBar
+    #fileNames = cms.untracked.vstring('/store/mc/Run3Winter22MiniAOD/TbarWplus_DR_AtLeastOneLepton_CP5_13p6TeV_powheg-pythia8/MINIAODSIM/122X_mcRun3_2021_realistic_v9-v2/40000/3ab2bcf6-c797-483a-a953-ceac2d7fb7ac.root'), #TBarWplus
+    #fileNames = cms.untracked.vstring('/store/mc/Run3Winter22MiniAOD/TWminus_DR_AtLeastOneLepton_CP5_13p6TeV_powheg-pythia8/MINIAODSIM/122X_mcRun3_2021_realistic_v9-v2/2560000/2532fe5f-3941-4a67-ab89-931061eaa513.root'), #TWminus
+    noEventSort = cms.untracked.bool(True),
+    secondaryFileNames = cms.untracked.vstring()
+)
+
+process.cutMuons     = cms.EDFilter("PATMuonSelector",
+                                    src = cms.InputTag("slimmedMuons"),
+                                    #cut = cms.string("pt > 35 && abs(eta) < 2.4 && passed('CutBasedIdTight') && (pfIsolationR04().sumChargedHadronPt + pfIsolationR04().sumNeutralHadronEt + pfIsolationR04().sumPhotonEt)/pt < 0.15 && isGlobalMuon() && isPFMuon()"))
+                                    cut = cms.string("pt > 35 && abs(eta) < 2.4 && isGlobalMuon && isPFMuon && globalTrack.normalizedChi2 < 10 && globalTrack.hitPattern.numberOfValidMuonHits > 0 && numberOfMatchedStations > 1 && muonBestTrack.dxy < 0.2 && innerTrack.hitPattern.numberOfValidPixelHits > 0 && innerTrack.hitPattern.trackerLayersWithMeasurement > 5 && (max(pfIsolationR04().sumChargedHadronPt + pfIsolationR04().sumNeutralHadronEt + pfIsolationR04().sumPhotonEt - pfIsolationR04().sumPUPt,0.0)/pt) < 0.15 && muonBestTrack.dz < 0.5"))
+
+process.cutElectrons     = cms.EDFilter("PATElectronSelector",
+                                    src = cms.InputTag("slimmedElectrons"),
+                                        cut = cms.string("pt > 35 && abs(eta) < 2.4 && electronID('cutBasedElectronID-Fall17-94X-V2-tight') && (superCluster.position.Eta  < 1.4442 || superCluster.position.Eta  > 1.5660)"))
+
+
+process.cutJets     = cms.EDFilter("PATJetSelector",
+                                    src = cms.InputTag("slimmedJets"),
+                                    cut = cms.string("pt > 30 && abs(eta) < 2.4 && numberOfDaughters > 1 && neutralHadronEnergyFraction < 0.9 && neutralEmEnergyFraction < 0.9 && chargedHadronEnergyFraction > 0 && chargedEmEnergyFraction < 0.8 && chargedMultiplicity > 0"))
+
+process.TFileService = cms.Service("TFileService",
+    fileName = cms.string('testoutput.root')
+)
+
+
+process.treePlanter = cms.EDAnalyzer("TreePlanter",
+                                     muons        = cms.InputTag("cutMuons"),     
+                                     electrons    = cms.InputTag("cutElectrons"), 
+                                     photons      = cms.InputTag("filteredPhotons"), 
+                                     jets         = cms.InputTag("cutJets"),     
+                                     Jetsak8 = cms.InputTag("disambiguatedJetsAK8"),  
+                                     MET          = cms.InputTag("slimmedMETs"),
+                                     Vertices     = cms.InputTag("goodPrimaryVertices"),                                    
+     )
+
+process.p = cms.Path(
+  process.cutMuons
+  + process.cutElectrons
+  + process.cutJets
+  + process.treePlanter
+)

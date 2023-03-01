@@ -1,0 +1,20 @@
+<library name="Run3VBSPolPlugins" file="*.cc">
+  <use name="FWCore/Framework"/>
+  <use name="FWCore/PluginManager"/>
+  <use name="FWCore/ParameterSet"/>
+  <use name="CommonTools/UtilAlgos"/>
+  <use name="JetMETCorrections/Modules"/>
+  <use name="TrackingTools/Records"/>
+  <use name="TrackingTools/TransientTrack"/>
+  <use name="DataFormats/PatCandidates"/>
+  <use name="CondFormats/JetMETObjects"/>
+  <use name="SimGeneral/HepPDTRecord"/>
+  <use name="Run3VBSPol/DataFormats/src"/>
+  <use name="Run3VBSPol/Run3VBSPol"/>
+  <use name="clhep"/>
+  <use name="boost"/>
+  <use name="root"/>
+
+  <flags EDM_PLUGIN="1"/>
+</library>
+

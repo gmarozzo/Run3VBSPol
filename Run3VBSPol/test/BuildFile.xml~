@@ -1,0 +1,7 @@
+<use name="DataFormats/RecoCandidate"/>
+<use name="FWCore/ServiceRegistry"/>
+<use name="FWCore/ParameterSet/Config"/>
+<use name="CommonTools/UtilAlgos"/>
+<export>
+<lib name="1"/>
+</export>
