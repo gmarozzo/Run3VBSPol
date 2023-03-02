@@ -9,7 +9,6 @@
   <use name="DataFormats/PatCandidates"/>
   <use name="CondFormats/JetMETObjects"/>
   <use name="SimGeneral/HepPDTRecord"/>
-  <use name="Run3VBSPol/DataFormats"/>
   <use name="Run3VBSPol/Run3VBSPol"/>
   <use name="clhep"/>
   <use name="boost"/>

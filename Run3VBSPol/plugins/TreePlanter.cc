@@ -178,8 +178,10 @@ void TreePlanter::analyze(const edm::Event& event, const edm::EventSetup& setup)
       if(electrontofill.p4().Pt()<electronidptlimits[i+1]){
         for(int j=0; j<6;j++){
           if(electrontofill.p4().Eta()<electronidetalimits[i+1]){
-            electron_SF_->push_back(electronidSFmap[i][j]);}
+            electron_SF_->push_back(electronidSFmap[i][j]);
+            break;}
 	}
+	break;
       }
     }
   }
@@ -200,7 +202,12 @@ void TreePlanter::analyze(const edm::Event& event, const edm::EventSetup& setup)
 
   tree_->Fill();
   (*muon_pt_).clear();
+  (*muon_eta_).clear();
+  (*muon_recSF_).clear();
+  (*muon_idSF_).clear();
   (*electron_pt_).clear();
+  (*electron_sceta_).clear();
+  (*electron_SF_).clear();
   (*mll_).clear();
 }
 

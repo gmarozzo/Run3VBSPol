@@ -2,7 +2,6 @@
 <use name="FWCore/ServiceRegistry"/>
 <use name="FWCore/ParameterSet"/>
 <use name="CommonTools/UtilAlgos"/>
-<use name="Run3VBSPol/DataFormats"/>
 <export>
 <lib name="1"/>
 </export>
