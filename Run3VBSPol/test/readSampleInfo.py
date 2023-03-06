@@ -1,7 +1,7 @@
 # Imported from:
 # https://raw.githubusercontent.com/bellan/VVXAnalysis/master/Producers/python/readSampleInfo.py
 #
-import sys, os, commands, math
+import sys, os, subprocess, math
 
 
 def checkBool(val):
@@ -21,7 +21,7 @@ def isFloat(value):
     return False
 
 
-def readSamplesInfo(infoFilePath = 'samples_8TeV.csv', indexBy = 'identifier'):
+def readSamplesInfo(infoFilePath = '../samples_2022_MC.csv', indexBy ='identifier'):
   """
   Loads the sample information database from the given comma-separated-values
   (csv) file.
@@ -43,7 +43,7 @@ def readSamplesInfo(infoFilePath = 'samples_8TeV.csv', indexBy = 'identifier'):
     # Assign info to the entry indexed by the dataset identifier
     if header:            
       if len(data) != len(header):
-        raise ValueError, "Inconsistent number of columns in data '" + line + "', expected header = " + str(header)
+        raise ValueError("Inconsistent number of columns in data '" + line + "', expected header = " + str(header))
 
       info                  = {}
       for (key, value) in zip(header, data):
@@ -52,16 +52,16 @@ def readSamplesInfo(infoFilePath = 'samples_8TeV.csv', indexBy = 'identifier'):
           if len(value.strip()) == 0:
             value           = []
           else:
-            value           = map(string.strip, value.split(";"))
+            value           = list(map(str.strip, value.split(";")))
             for v in value:
-              bareelement = map(string.strip, v.split("="))
+              bareelement = list(map(str.strip, v.split("=")))
               if len(bareelement) == 2:
                 if isFloat(bareelement[1]):
                   try:
-							int(bareelement[1])==float(bareelement[1]) # int(float number) will return ValueError
-							dictionary[bareelement[0]] = int(bareelement[1]) # avoid turning integers to floats
+                      int(bareelement[1])==float(bareelement[1]) # int(float number) will return ValueError
+                      dictionary[bareelement[0]] = int(bareelement[1]) # avoid turning integers to floats
                   except ValueError:
-							dictionary[bareelement[0]] = float(bareelement[1])
+                      dictionary[bareelement[0]] = float(bareelement[1])
                 else:
                   dictionary[bareelement[0]] = checkBool(bareelement[1])
               else:
@@ -71,10 +71,11 @@ def readSamplesInfo(infoFilePath = 'samples_8TeV.csv', indexBy = 'identifier'):
           info[key]           = dictionary
         else:
           info[key]           = value.strip()
-
+          print(key)     
+      
       index                 = info[indexBy]
       if index in database:
-        raise ValueError, "Duplicate entries encountered for %d" % index
+        raise ValueError("Duplicate entries encountered for %d" % index)
       del info[indexBy]
       database[index]       = info
 
@@ -90,29 +91,29 @@ def readSamplesInfo(infoFilePath = 'samples_8TeV.csv', indexBy = 'identifier'):
 
 
   if len(database) == 0:
-    raise ValueError, "Invalid information file '" + infoFilePath + "', no entries found."
+    raise ValueError("Invalid information file '" + infoFilePath + "', no entries found.")
   return (database, defaults)
 
 
 
-def readSampleInfo(sample, infoFilePath = 'samples_8TeV.csv', indexBy = 'identifier'):
+def readSampleInfo(sample, infoFilePath = '../samples_2022_MC.csv', indexBy = 'identifier'):
   db,defaults = readSamplesInfo(infoFilePath, indexBy)
 
   if sample in db:
     return db[sample]
   else:
-    print "Unknown sample", sample
+    print("Unknown sample", sample)
     sys.exit(2)
 
 
-def crossSection(sample, infoFilePath = 'samples_8TeV.csv', indexBy = 'identifier'):
+def crossSection(sample, infoFilePath = '../samples_2022_MC.csv', indexBy = 'identifier'):
   return float(readSampleInfo(sample, infoFilePath, indexBy)['crossSection'])
 
 #merge together db and defaults
-def readSampleDB(infoFilePath = 'samples_8TeV.csv', indexBy = 'identifier'):
+def readSampleDB(infoFilePath = '../samples_2022_MC.csv', indexBy = 'identifier'):
   db,defaults = readSamplesInfo(infoFilePath, indexBy)
   for sample in db:
-    for key,val in db[sample].iteritems():
+    for key,val in db[sample].items():
       if key in defaults:
         if val == "":
           db[sample][key] = defaults[key]
@@ -121,7 +122,7 @@ def readSampleDB(infoFilePath = 'samples_8TeV.csv', indexBy = 'identifier'):
   return db
 
 
-def typeOfSamples(infoFilePath = 'samples_8TeV.csv', indexBy = 'identifier'):
+def typeOfSamples(infoFilePath = '../samples_2022_MC.csv', indexBy = 'identifier'):
   db,defaults = readSamplesInfo(infoFilePath, indexBy)
   typeofsamples = []
   for sample in db:
@@ -131,7 +132,7 @@ def typeOfSamples(infoFilePath = 'samples_8TeV.csv', indexBy = 'identifier'):
       
   return typeofsamples
 
-def getSamplesBy(category, categoryvalue, infoFilePath = 'samples_8TeV.csv', indexBy = 'identifier'):
+def getSamplesBy(category, categoryvalue, infoFilePath = '../samples_2022_MC.csv', indexBy = 'identifier'):
   DB = readSampleDB(infoFilePath, indexBy)
   samples = []
   for sample in DB:
@@ -141,7 +142,7 @@ def getSamplesBy(category, categoryvalue, infoFilePath = 'samples_8TeV.csv', ind
         samples.append(sample)
     else:
       if not category in DB[sample]: 
-        print "ERROR unknown category!"
+        print("ERROR unknown category!")
         return samples
       if DB[sample][category] == categoryvalue:
         samples.append(sample)

@@ -102,14 +102,14 @@ def listFiles(sample, path, rec = False, full_info = False):
 
     # -- list from a local file --
     if path=="list" :
-        with open(sample) as f:
+        with open(sample,'r') as f:
             result = f.readlines()
         return result
 
     # -- listing from dbs --
     elif path=="dbs" :
         files, _, _ =runDBS(sample)
-        for line in files.split('\n'):
+        for line in files.decode().split('\n'):
 #            print line
 #            result.append("root://cms-xrd-global.cern.ch//"+line)
             result.append(line)
@@ -117,8 +117,8 @@ def listFiles(sample, path, rec = False, full_info = False):
 
     # -- listing from user dbs --
     elif path=="dbs-USER" :
-	print 'Querying USER db'
-	files, _, _ =runDBS(sample, 'prod/phys03')
+        print('Querying USER db')
+        files, _, _ =runDBS(sample, 'prod/phys03')
         for line in files.split('\n'):
             result.append(line)
         return result
@@ -146,7 +146,7 @@ def listFiles(sample, path, rec = False, full_info = False):
         if rec:
             cmd = 'dirlistrec'
 
-        print path+sample, cmd
+        print(path+sample, cmd)
         files, _, _ = runXRDCommand(path+sample, cmd)
 
         for line in files.split('\n'):

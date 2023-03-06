@@ -17,6 +17,8 @@
 #include "DataFormats/JetReco/interface/GenJet.h"
 #include <JetMETCorrections/Modules/interface/JetResolution.h>
 #include <DataFormats/PatCandidates/interface/PFParticle.h>
+#include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
+#include "HLTrigger/HLTcore/interface/HLTPrescaleProvider.h"
 
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 
@@ -54,8 +56,8 @@ class Electron;
 TreePlanter::TreePlanter(const edm::ParameterSet &config)
   : theMuonToken     (consumes<pat::MuonCollection>                (config.getParameter<edm::InputTag>("muons"    )))
   , theElectronToken (consumes<pat::ElectronCollection>            (config.getParameter<edm::InputTag>("electrons")))
-  , theJetToken      (consumes<std::vector<pat::Jet> >             (config.getParameter<edm::InputTag>("jets"     ))){
- 
+  , theJetToken      (consumes<std::vector<pat::Jet> >             (config.getParameter<edm::InputTag>("jets"     )))
+  , theHLTToken      (consumes<edm::TriggerResults>(edm::InputTag("TriggerResults","","HLT"))){
 }
 
 
@@ -73,7 +75,10 @@ void TreePlanter::beginJob(){
   electron_sceta_ = new std::vector<float>;
   electron_SF_ = new std::vector<float>;
 
+  njets_ = new std::vector<int>;
   mll_ = new std::vector<float>;
+
+  hlt_= new std::vector<string>;
 
   tree_->Branch("muon_pt",&muon_pt_);
   tree_->Branch("muon_eta",&muon_eta_);
@@ -82,7 +87,9 @@ void TreePlanter::beginJob(){
   tree_->Branch("electron_pt",&electron_pt_);
   tree_->Branch("electron_sceta",&electron_sceta_);
   tree_->Branch("electron_SF",&electron_SF_);
+  tree_->Branch("njets",&njets_);
   tree_->Branch("mll",&mll_);
+  tree_->Branch("hlt",&hlt_);
 }
 
 
@@ -105,6 +112,7 @@ void TreePlanter::endJob(){
   delete electron_pt_;
   delete electron_sceta_;
   delete electron_SF_;
+  delete njets_;
   delete mll_;
 
 }
@@ -192,7 +200,19 @@ void TreePlanter::analyze(const edm::Event& event, const edm::EventSetup& setup)
   if(muonSize>0){leadingmuon = (*muons)[0];}
   if(electronSize>0){leadingelectron = (*electrons)[0];}
 
-  if(muonSize*electronSize==1 && jets->size()>1 ){
+  unsigned int jetSize = jets->size();
+
+  for(unsigned int k=0; k<jets->size();k++){
+    float dR1 = reco::deltaR((*jets)[k],leadingmuon);
+    float dR2 = reco::deltaR((*jets)[k],leadingelectron);
+    if(dR1 < 0.4  || dR2 < 0.4){
+      jetSize--;
+    }    
+  }
+
+  njets_->push_back(jetSize);
+
+  if(muonSize*electronSize==1 && jetSize>1 ){
     if(leadingmuon.charge()*leadingelectron.charge() == -1){
       ROOT::Math::LorentzVector p4 = leadingmuon.p4()+leadingelectron.p4();
       float mll = p4.M();
@@ -208,6 +228,7 @@ void TreePlanter::analyze(const edm::Event& event, const edm::EventSetup& setup)
   (*electron_pt_).clear();
   (*electron_sceta_).clear();
   (*electron_SF_).clear();
+  (*njets_).clear();
   (*mll_).clear();
 }
 

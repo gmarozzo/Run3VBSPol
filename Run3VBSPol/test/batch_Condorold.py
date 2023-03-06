@@ -14,16 +14,6 @@ from optparse import OptionParser
 from eostools import *
 from readSampleInfo import *
 
-def execfile(filepath, globals=None, locals=None):
-    if globals is None:
-        globals = {}
-    globals.update({
-        "__file__": filepath,
-        "__name__": "__main__",
-    })
-    with open(filepath, 'rb') as file:
-        exec(compile(file.read(), filepath, 'exec'), globals, locals)
-
 
 def chunks(l, n):
     return [l[i:i+n] for i in range(0, len(l), n)]
@@ -51,7 +41,7 @@ def split(comps):
         else:
             numJobs=1
             splitComps.append( comp )
-        print (comp.name, ": files=", len(comp.files), ' chunkSize=', chunkSize, "jobs=", numJobs)
+        print comp.name, ": files=", len(comp.files), ' chunkSize=', chunkSize, "jobs=", numJobs
     return splitComps
 
 
@@ -249,33 +239,37 @@ class MyBatchManager:
 
         (self.options_,self.args_) = self.parser_.parse_args()
 
+
+        if ( len(self.args_)!=1) :
+            print "Please specify sample.csv file to be used.\n"
+            sys.exit(1)
              
-        csvfile = self.args_[1]
-        
+        csvfile = self.args_[0]
+
         if (os.path.exists(csvfile) == False ):
-            print("File", csvfile, "does not exist; please specify a valid one.\n")
+            print "File", csvfile, "does not exist; please specify a valid one.\n"
             sys.exit(1)
 
         # Handle output directory
-        outputDir = self.args_[3]
+        outputDir = self.options_.outputDir
         if outputDir==None:
 #             today = date.today()
 #             outputDir = 'OutCmsBatch_%s' % today.strftime("%d%h%y_%H%M")
             gitrevision = subprocess.check_output(['git', "rev-parse", "--short", "HEAD"]) #revision of the git area where the command is exectuted
             outputDir = "PROD_" + csvfile.replace('.csv','') + "_"+gitrevision.rstrip()
-            print('output directory not specified, using %s' % outputDir)
+            print 'output directory not specified, using %s' % outputDir
         self.outputDir_ = os.path.abspath(outputDir)
         self.workingDir = str(self.outputDir_)
         if( os.path.isdir(self.outputDir_) == True ):
-            input2 = ''
+            input = ''
             if not self.options_.force:
-                while input2 != 'y' and input2 != 'n':
-                    input2 = input( 'The directory ' + self.outputDir_ + ' exists. Are you sure you want to continue? its contents will be overwritten [y/n] ' )
-            if input2 == 'n':
+                while input != 'y' and input != 'n':
+                    input = raw_input( 'The directory ' + self.outputDir_ + ' exists. Are you sure you want to continue? its contents will be overwritten [y/n] ' )
+            if input == 'n':
                 sys.exit(1)
             else:
                 os.system( 'rm -rf ' + self.outputDir_)
-        print('Job folder: %s' % self.outputDir_)
+        print 'Job folder: %s' % self.outputDir_
         self.mkdir( self.outputDir_ )
         with open(os.path.join(self.outputDir_, ".gitignore"), "w") as f:
             f.write("**/*\n")
@@ -291,14 +285,14 @@ class MyBatchManager:
        mkdir = 'mkdir -p %s' % dirname
        ret = os.system( mkdir )
        if( ret != 0 ):
-         print('please remove or rename directory: ', dirname)
+         print 'please remove or rename directory: ', dirname
          sys.exit(4)
     
     
 
        
     def PrepareJobs(self, listOfValues, listOfDirNames=None):
-        print ('PREPARING JOBS ======== ')
+        print 'PREPARING JOBS ======== '
         self.listOfJobs_ = []
 
         if listOfDirNames is None:
@@ -308,7 +302,7 @@ class MyBatchManager:
             for value, name in zip( listOfValues, listOfDirNames):
                 self.PrepareJob( value, name )
         if batchManager.options_.verbose:
-            print("list of jobs:")
+            print "list of jobs:"
             pp = pprint.PrettyPrinter(indent=4)
             pp.pprint( self.listOfJobs_)
 
@@ -321,7 +315,7 @@ class MyBatchManager:
        
        calls PrepareJobUser, which should be overloaded by the user.
        '''
-       print ('---PrepareJob N: ', value,  ' name: ', dirname)
+       print '---PrepareJob N: ', value,  ' name: ', dirname
 
        inputType="miniAOD"
        if "NANOAOD" in (splitComponents[value].files)[0] :
@@ -352,24 +346,27 @@ class MyBatchManager:
         scriptFile.close()
         os.system('chmod +x %s' % scriptFileName)
         template_name = splitComponents[value].samplename + 'run_template_cfg.py'
+
 #	working_dir = os.path.dirname(self.outputDir_)
-        template_file_name = '%s/%s'%(self.outputDir_,template_name) #splitComponents[value].samplename + '_run_template_cfg.py' 
+
+
+	template_file_name = '%s/%s'%(self.outputDir_, template_name) #splitComponents[value].samplename + '_run_template_cfg.py' 
 #        shutil.copyfile(template_file_name, '%s/run_cfg.py'%jobDir)  
         new_job_path = '%s/run_cfg.py'%jobDir
-        files = splitComponents[value].files 
-        files = ["'%s'"%f for f in files]
-        files = ', '.join(files)
-        with open(new_job_path, 'w') as new_job_cfg :
-            with open(template_file_name) as f:
-                for line in f :
-                    if line.find('REPLACE')  > 1 :
+	files = splitComponents[value].files 
+	files = ["'%s'"%f for f in files]
+	files = ', '.join(files)
+	with open(new_job_path, 'w') as new_job_cfg :
+	    with open(template_file_name) as f:
+	        for line in f :
+		    if line.find('REPLACE')  > 1 :
                         actual_source_string = ""
                         if inputType=="miniAOD" :
                             actual_source_string = "fileNames = cms.untracked.vstring(%s),\n"%files
                         elif inputType=="nanoAOD" :
                             actual_source_string = 'setConf("fileNames",%s)\n'%splitComponents[value].files
-                        line = actual_source_string
-                    new_job_cfg.write(line)
+        	        line = actual_source_string
+		    new_job_cfg.write(line)
  
     def PrepareJobUserTemplate(self, jobDir, value, inputType="miniAOD" ):
        '''Prepare one job. This function is called by the base class.'''
@@ -391,17 +388,17 @@ class MyBatchManager:
        #else: variables['PD'] = ""
 
        if batchManager.options_.verbose:
-           print ('value ',value)
-           print ('scv ',splitComponents[value].name)
+           print 'value ',value
+           print 'scv ',splitComponents[value].name
        
        variables['SAMPLENAME'] = splitComponents[value].samplename
        variables['XSEC'] = splitComponents[value].xsec 
        #variables = {'IsMC':IsMC, 'PD':PD, 'MCFILTER':MCFILTER, 'SUPERMELA_MASS':SUPERMELA_MASS, 'SAMPLENAME':SAMPLENAME, 'XSEC':XSEC, 'SKIM_REQUIRED':SKIM_REQUIRED}
 
        template_name = variables['SAMPLENAME'] + 'run_template_cfg.py'
-       print ('\tSaving template as %s/%s'%(os.path.basename(self.outputDir_), template_name))
-       print ("\tParameters: ", variables)
-       print ('\tpyFragments: ',splitComponents[value].pyFragments)
+       print '\tSaving template as %s/%s'%(os.path.basename(self.outputDir_), template_name)
+       print "\tParameters: ", variables
+       print '\tpyFragments: ',splitComponents[value].pyFragments
 #       print 'jobDir=',jobDir
 
        cfgFile = open('%s/%s'%(self.outputDir_, template_name),'w')
@@ -458,7 +455,7 @@ class Component(object):
     def __init__(self, name, prefix, dataset, pattern, splitFactor, variables, pyFragments, xsec, BR, pdfstep, cfgFileName=""):
         self.name = name
         self.samplename = name
-        print("checking "+self.name)
+        print "checking "+self.name
 
         if prefix=="source.fileNames" : #take the files that are specified in the process.source.fileNames in the input .py
             handle = open(cfgFileName, 'r')
@@ -478,18 +475,20 @@ class Component(object):
         self.xsec = float(xsec)*float(BR)
         self.pdfstep = int(pdfstep)
         if self.pdfstep <0 or self.pdfstep>2:
-            print("Unknown PDF step", pdfstep9)
+            print "Unknown PDF step", pdfstep
             sys.exit(1)
-
+        
+        
+      
 if __name__ == '__main__':
     batchManager = MyBatchManager()
     
-    cfgFileName = batchManager.args_[2] #"analyzer_Run2.py" # This is the python job config. FIXME make it configurable.
-    sampleCSV  = batchManager.args_[1]            # This is the csv file with samples to be analyzed./
+    cfgFileName = batchManager.options_.cfgFileName #"analyzer_Run2.py" # This is the python job config. FIXME make it configurable.
+    sampleCSV  = batchManager.args_[0]            # This is the csv file with samples to be analyzed./
 
     components = []
     sampleDB = readSampleDB(sampleCSV)
-    for sample, settings in sampleDB.items():
+    for sample, settings in sampleDB.iteritems():
         if settings['execute']:
             pdfstep = batchManager.options_.PDFstep
             components.append(Component(sample, settings['prefix'], settings['dataset'], settings['pattern'], settings['splitLevel'], settings['::variables'],settings['::pyFragments'],settings['crossSection'], settings['BR'], pdfstep,cfgFileName)) #FIXME-RB not bool(settings['pdf']))) #settings['pdf'] used here as full sel, without cuts.

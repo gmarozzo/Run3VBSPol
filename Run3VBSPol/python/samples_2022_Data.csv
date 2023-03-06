@@ -1,0 +1,7 @@
+identifier,process,crossSection=-1,BR=1,execute=True,dataset,prefix,pattern,splitLevel,::variables,::pyFragments,comment
+
+DoubleMuon2022C,,-1,,,DoubleMuon/Run2022C-PromptReco-v1/MINIAOD,dbs,,2,DATA_TAG=ReReco;PD=DoubleMu;PROCESS_CR=True;LEPTON_SETUP=2018,,
+MuonEG2022C,,-1,,,MuonEG/Run2022C-PromptReco-v1/MINIAOD,dbs,,2,DATA_TAG=ReReco;PD=DoubleMu;PROCESS_CR=True;LEPTON_SETUP=2018,,
+SingleMuon2022C,,-1,,,SingleMuon/Run2022C-PromptReco-v1/MINIAOD,dbs,,5,DATA_TAG=ReReco;PD=DoubleMu;PROCESS_CR=True;LEPTON_SETUP=2018,,
+Muon2022C,,-1,,,Muon/Run2022C-PromptReco-v1/MINIAOD,dbs,,5,DATA_TAG=ReReco;PD=DoubleMu;PROCESS_CR=True;LEPTON_SETUP=2018,,
+EGamma2022C,,-1,,,EGamma/Run2022C-PromptReco-v1/MINIAOD,dbs,,5,DATA_TAG=ReReco;PD=DoubleMu;PROCESS_CR=True;LEPTON_SETUP=2018,,

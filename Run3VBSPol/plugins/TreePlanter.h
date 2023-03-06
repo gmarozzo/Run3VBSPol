@@ -24,6 +24,11 @@
 
 #include "DataFormats/PatCandidates/interface/MET.h"
 
+#include <string>
+
+using namespace std;
+
+
 //#include <CommonLHETools/LHEHandler/interface/LHEHandler.h>
 //#include <JHUGenMELA/MELA/interface/Mela.h>
 
@@ -62,15 +67,17 @@ class TreePlanter: public edm::EDAnalyzer {
   std::vector<float> * electron_sceta_;
   std::vector<float> * electron_SF_;
 
+  std::vector<int> * njets_;
   std::vector<float> * mll_;
+
+  std::vector<string> * hlt_;
     
   // ------------------- Input Labels ------------------- //
   
   edm::EDGetTokenT<pat::MuonCollection>                 theMuonToken;
   edm::EDGetTokenT<pat::ElectronCollection>             theElectronToken;
   edm::EDGetTokenT<std::vector<pat::Jet> >              theJetToken;
-
-};
+  edm::EDGetTokenT<edm::TriggerResults>              theHLTToken;};
 #endif
 
 

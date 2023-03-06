@@ -35,6 +35,10 @@ process.cutJets     = cms.EDFilter("PATJetSelector",
                                     src = cms.InputTag("slimmedJets"),
                                     cut = cms.string("pt > 30 && abs(eta) < 2.4 && numberOfDaughters > 1 && neutralHadronEnergyFraction < 0.9 && neutralEmEnergyFraction < 0.9 && chargedHadronEnergyFraction > 0 && chargedEmEnergyFraction < 0.8 && chargedMultiplicity > 0"))
 
+process.load("Run3VBSPol.Run3VBSPol.HLTFilter_cfi")
+process.hltFilter.TriggerResultsTag = cms.InputTag("TriggerResults","","HLT")
+
+
 process.TFileService = cms.Service("TFileService",
     fileName = cms.string('testoutput.root')
 )
@@ -51,7 +55,8 @@ process.treePlanter = cms.EDAnalyzer("TreePlanter",
      )
 
 process.p = cms.Path(
-  process.cutMuons
+  process.hltFilter
+  + process.cutMuons
   + process.cutElectrons
   + process.cutJets
   + process.treePlanter
